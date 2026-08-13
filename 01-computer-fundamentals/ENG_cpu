@@ -1,0 +1,319 @@
+CPU — how it is structured and how the processor works
+
+These are notes for understanding what actually happens "inside" a computer when a program is executed. The idea is to explain not just "what it is", but why it is structured this way and how it all works together.
+
+1. What is a CPU and why is it needed
+
+CPU (Central Processing Unit) is the "brain" of the computer, but more precisely, it is a device that can do only one thing — execute simple instructions one after another, very, very quickly.
+
+When you write a program in any language, in the end it turns into a long list of tiny commands like "add these two numbers" or "go to the next line of code". The CPU does not know what Python or JavaScript is — it sees only these elementary commands.
+
+The path of a program:
+
+Program (code) → compiler/interpreter → machine instructions → CPU executes them → result
+
+Example: you have code A + B. The CPU receives an instruction like "add the value in register A to the value in register B", executes it in one step, and puts the result where it needs to go.
+
+It is important to understand: the CPU does not "think" in the human sense. It simply mechanically executes instructions — but it does this billions of times per second, and from this simple repetition everything emerges — from games to operating systems.
+
+2. Four types of operations that a CPU can perform
+
+Everything a CPU does comes down to just four categories of actions. It is like an alphabet — any program is built from these simple "letters".
+
+Arithmetic operations — this is mathematics: addition, subtraction, multiplication, comparison of numbers.
+
+5 + 3
+
+A == B
+
+Logical operations
+
+This is bitwise/Boolean logic — operations that work not with "numbers" in the usual sense, but with bits (0 and 1).
+
+AND, OR, XOR
+
+For example, these operations are used to check conditions ("are both values true", "is at least one", etc.), as well as for bit manipulation in low-level programming.
+
+Moving data
+
+The CPU constantly moves data back and forth: from memory to a register, from one register to another, and back to memory.
+
+LOAD — retrieve data from memory
+STORE — put data back into memory
+MOV — move data between registers
+
+Why is this a separate category? Because data does not appear where it is needed by itself — it first has to be physically "brought" to where the CPU can work with it (into registers).
+
+Controlling program execution
+
+This is what determines which instruction will be executed next. Without this, a program would simply go in a straight line from top to bottom and could not have loops, conditions (if), or function calls.
+
+JUMP — move to another instruction
+CALL — call a function
+RET — return from a function
+
+Example of how these 4 types work together (simplified, pseudocode):
+
+LOAD — load a number from memory into a register
+ADD — add two numbers
+COMPARE — compare the result with something
+JUMP — if the condition is met — jump to another location in the program
+STORE — save the final result back to memory
+
+This is a rough outline of the real CPU execution cycle. In actual architectures, the instructions are named differently (in x86-64, for example, MOV, ADD, CMP, JMP), but the essence is the same — these are simply "verbs" from which absolutely any program is built, no matter how complex it may seem from the outside.
+
+3. ISA — the common "language" in which the CPU understands commands
+
+ISA (Instruction Set Architecture) is a set of rules and specific instructions that a particular processor can execute. It is like the alphabet and grammar of a particular language — the CPU understands only those "words" that are defined in its ISA.
+
+Different processor families use different ISAs, and they are not directly compatible with each other — instructions written for one architecture will not work on another without translation (emulation or recompilation).
+
+Two main architectures today:
+
+Architecture | Where it is used
+x86-64 (Intel, AMD) | Windows PCs, Linux servers, data centers
+ARM64 / AArch64 | Smartphones, Apple Silicon (M1/M2/M3...), Raspberry Pi, many cloud servers
+Intel Core → x86-64
+AMD Ryzen → x86-64
+Apple M-series → ARM64
+
+That is why, for example, a program compiled for an Intel Mac will not run directly on an Apple Silicon Mac without a special "translator" (such as Apple's Rosetta) — these are different ISAs, different "languages" of machine instructions.
+
+4. Cores and threads — how a CPU executes multiple things "simultaneously"
+
+Core
+
+A core is, essentially, a separate independent "mini-processor" inside the CPU, capable of independently executing instructions. In the past, processors were single-core — today, practically all modern CPUs contain multiple cores.
+
+The logic is simple: more cores — more tasks can be executed truly in parallel (rather than one after another, as would be necessary with a single core).
+
+But there is an important caveat: 8 cores does NOT automatically mean "8 times faster". Actual performance depends on many factors:
+
+the nature of the task (whether it can be split into parallel pieces)
+clock speed
+IPC (how much work is done per clock cycle)
+processor architecture
+cache size and speed
+memory speed
+how much the program itself is designed for multithreading
+
+In other words, cores are potential for parallelism, not a guarantee of acceleration.
+
+Thread
+
+A thread is a "virtual" execution line inside a core. Some processors can execute two threads on one physical core simultaneously, sharing its resources.
+
+Example: "4 cores, 8 threads" means that each of the 4 cores supports 2 hardware threads.
+
+Core 1 → Thread 1 + Thread 2
+Core 2 → Thread 3 + Thread 4
+Core 3 → Thread 5 + Thread 6
+Core 4 → Thread 7 + Thread 8
+
+For Intel, this technology is called Hyper-Threading
+For AMD — SMT (Simultaneous Multithreading)
+
+It is important to understand: two threads on one core are NOT the same as two full physical cores. They share the resources of one core (for example, the ALU), so the performance increase from this is usually noticeably smaller than from actually adding another core. Imagine it as two people sharing one desk — they can work "in parallel", but they still sometimes get in each other's way because there is only one resource (the desk).
+
+5. Clock speed — the "pulse" of the processor
+
+A CPU has an internal clock generator — imagine it as a metronome that continuously "ticks" at a certain speed. Each of its "ticks" is called a clock cycle, and on each cycle the CPU synchronously advances its work by one step.
+
+4.5 GHz means: this "metronome" makes approximately 4.5 billion ticks per second.
+
+It would seem logical to assume that 4.5 GHz = 4.5 billion instructions per second. But that is not the case, and here is why:
+
+One instruction may require several clock cycles to execute (for example, division is usually "more expensive" than addition)
+
+Modern processors execute instructions using a complex, "pipelined" approach — several instructions can be in different execution stages simultaneously ("in flight")
+
+Therefore, the following concept is introduced:
+
+IPC (Instructions Per Cycle) — how many instructions, on average, the CPU actually executes per clock cycle. The higher the IPC at the same frequency, the more efficient the processor architecture.
+
+That is why comparing processors only by gigahertz is a mistake. A processor with 3.5 GHz and high IPC can easily outperform a processor with 4.5 GHz and low IPC.
+
+6. ALU — the "calculator" inside the CPU
+
+ALU (Arithmetic Logic Unit) is a specific block inside the CPU that is physically responsible for performing:
+
+arithmetic operations: + − *
+logical operations: AND OR XOR
+comparison operations: < > ==
+
+When an instruction requires something to be calculated or compared — the ALU performs this work. Everything else in the CPU (control, memory, registers) exists, by and large, to provide the ALU with the necessary data on time and retrieve the result from it.
+
+7. Control Unit — the "conductor" of the processor
+
+The Control Unit does not perform calculations itself — it coordinates the operation of all other parts of the CPU: it decides what needs to be done with the current instruction and directs data where it needs to go (to the ALU, registers, memory).
+
+Instruction
+↓
+Control Unit ("what needs to be done with this?")
+↓
+ALU / registers / memory
+
+Example:
+
+Register A = 10
+Register B = 20
+Instruction: ADD A, B
+
+The Control Unit sees the ADD instruction, understands that it needs to take the values from registers A and B, send them to the ALU, get the result, and write it back.
+
+Result: A = 30
+
+Why are registers used instead of directly using RAM? Because registers are physically located inside the CPU itself and operate an order of magnitude faster than accessing RAM. It is like the difference between taking a tool from your own desk (register) or going to a warehouse to get it (RAM).
+
+8. Instruction Pointer — the "bookmark" in the program code
+
+Instruction Pointer (called RIP in x86-64) is a special register that stores the address of the next instruction that the CPU must execute.
+
+Imagine the program code as a sequence of memory cells:
+
+Memory:
+0x1000 → instruction A
+0x1004 → instruction B
+0x1008 → instruction C
+↑
+RIP
+
+The execution cycle is extremely simple:
+
+CPU looks at where RIP points
+Retrieves the instruction at that address
+Executes it
+RIP automatically moves to the next instruction (or "jumps" somewhere else if it was a jump instruction — JUMP)
+Repeat
+
+Essentially, RIP is a "bookmark" that always shows the CPU "where I stopped"
+
+9. Stack Pointer — how the CPU remembers where to return
+
+To understand the Stack Pointer, you first need to understand the stack itself.
+
+What is a stack
+
+A stack is an area of memory that operates according to the LIFO (Last In, First Out) principle — "last in, first out". The easiest analogy is a stack of plates: you can only put a plate on top, and you can also only take one from the top. You cannot pull a plate out from the middle of the stack without removing everything above it.
+
+In x86-64, the stack grows downward — that is, toward decreasing memory addresses (which is somewhat counterintuitive, but this is how it historically developed).
+
+What is the Stack Pointer
+
+Stack Pointer (in x86-64 — RSP) is a register that always stores the address of the current "top" of the stack, that is, it indicates exactly where the "top plate" is located.
+
+Why is the stack needed at all
+
+The stack is used when a program calls functions. And the main problem it solves is that the CPU needs to remember where to return after the function finishes.
+
+Imagine a chain of calls:
+
+function A()
+↓ calls
+function B()
+↓ calls
+function C()
+
+When C() finishes — the CPU must return back to B(), specifically to the exact place from which it was called. And when B() finishes — return to A(). The stack is what stores the "history" of these calls, like breadcrumbs along the path.
+
+What this looks like step by step
+
+When main() calls foo():
+
+CPU puts the return address on the stack — the address of the instruction to which it will need to return after foo() finishes
+RSP moves downward (the stack "grows")
+Inside foo(), local variables may appear — they are also placed on the stack, RSP moves again
+When foo() finishes its work — the return address is removed from the stack
+The value from the return address is written into RIP — and the CPU literally "jumps" back to main(), to where the call was made
+RSP returns to the position where it was before the call
+
+Visually (the stack grows from top to bottom by addresses):
+
+High address
+┌───────────────────────┐
+│ return address │ ← where to return after foo()
+├───────────────────────┤
+│ local variables foo │
+├───────────────────────┤
+│ ... │ ← RSP points here (top of the stack)
+└───────────────────────┘
+Low address
+
+Why this is critical for security
+
+The return address is essentially ordinary data in memory, not something "protected" by magic. This means that if a program carelessly writes data into a buffer located on the stack (the classic example is using a function like strcpy without checking the length of the input data), and the write goes beyond the boundaries of this buffer — it can overwrite the return address.
+
+Then, when the function finishes, the CPU will try to "return" not to where it should, but to where the attacker wrote. This is the fundamental idea behind an entire class of attacks:
+
+Term | Explanation
+Buffer overflow | Writing data beyond the boundaries of the memory allocated for it
+Memory corruption | A broader class of bugs related to memory corruption (buffer overflow is one specific case)
+ROP (Return-Oriented Programming) | A technique in which an attacker does not inject new code, but instead "chains together" small pieces of code (gadgets) already present in the program by manipulating a sequence of return addresses on the stack
+Exploit development | Development of code that uses a discovered vulnerability (for example, memory corruption) to gain control over a program
+Debugging | The process of finding the causes of errors in a program — often involving step-by-step execution of code and observing the contents of registers and memory in real time
+Malware analysis | Studying malicious programs: how they are structured, what they do, how to detect and neutralize them
+
+Understanding the stack and return address is literally the foundation without which it is impossible to consciously work with reverse engineering, exploits, or malware analysis.
+
+10. Registers — the CPU's work desk
+
+Registers are tiny but incredibly fast memory cells physically located inside the CPU itself (unlike RAM, which is located separately and physically farther away).
+
+This is the "work desk" where the CPU puts the data it is working with right now. There are few registers (unlike gigabytes of RAM), but accessing them happens almost instantly compared to accessing RAM.
+
+General-purpose registers (for storing arbitrary data) are supplemented by special registers with specific roles — for example, the already familiar RIP (points to the next instruction) and RSP (points to the top of the stack).
+
+11. Flags / Status register — the CPU's "notes" about the last operation
+
+This is another special register where the CPU automatically stores information about the result of the last executed operation — a kind of short "notes in the margins":
+
+Was the result equal to zero?
+Was there an overflow (did the number exceed the allowed limits)?
+Was the result negative?
+
+Why is this needed? Because conditional jumps operate precisely on the basis of these flags. When the CPU executes something like "if A == B, jump here" — what actually happens is this: first, a comparison is performed (COMPARE), the result of which sets the flags, and then the jump instruction (JUMP IF EQUAL) simply checks the required flag and decides whether to jump or not.
+
+12. CPU Cache — fast memory "at hand" for the processor
+
+Why is a cache needed at all
+
+We have already established: registers are extremely fast, but there are few of them. RAM is large, but by CPU standards it is very slow. The difference in speed is enormous: while the CPU waits for data from RAM, it can manage to execute hundreds of instructions for nothing.
+
+Imagine: you are working at a desk (registers), but the documents you need are not on the desk, but stored in an archive in another building (RAM). Every time you have to run to the archive — it is catastrophically slow, even if the archive itself is huge and contains everything you need.
+
+A cache is like a small cabinet next to the desk, where you move documents in advance that you are likely to need again in the near future. It is much smaller than the archive, but accessing it takes seconds rather than walking across the entire city.
+
+Physically, a cache is also memory, but it is located much closer to the CPU cores (sometimes directly inside them) and is made using a faster, but also more expensive, technology than ordinary RAM. That is why caches are always small — megabytes, not gigabytes.
+
+Cache levels: L1, L2, L3
+
+A cache is usually organized into several levels, from the fastest and smallest to the slower and larger:
+
+Level | Speed | Size | Location
+L1 | Fastest | Smallest (usually tens of KB) | Dedicated to each core
+L2 | Fast | Larger (hundreds of KB – a few MB) | Often also dedicated to each core
+L3 | Slower than L1/L2, but still much faster than RAM | Largest (several MB – tens of MB) | Usually one shared cache for the entire CPU (all cores)
+
+The logic is simple — first the CPU searches for data in L1 (the closest and fastest place). If it does not find it — it goes to L2. If it does not find it there — it goes to L3. And only if the data is not present in any cache level does the CPU access RAM — which is significantly slower than everything else.
+
+Cache hit and cache miss
+
+When the CPU finds the required data in the cache — this is called a cache hit ("hit"). When the data is not there and it has to go to RAM — this is a cache miss ("miss").
+
+The more hits and fewer misses — the faster the program actually runs, even if the clock speed and IPC are the same. That is why cache size and efficiency are one of the key factors in real CPU performance, alongside frequency and the number of cores.
+
+How does the CPU know what to put in the cache
+
+The CPU does not make random guesses — it relies on two simple observations about how programs usually behave:
+
+Temporal locality: if some data was used just now — there is a high probability that it will be needed again very soon (for example, a counter variable in a loop).
+
+Spatial locality: if the CPU accessed some memory address — there is a high probability that neighboring addresses will also be needed soon (for example, elements of an array stored consecutively).
+
+Therefore, when the CPU retrieves data from RAM, it usually retrieves not a single memory cell, but an entire "piece" of neighboring memory at once (this is called a cache line) — in anticipation that this neighboring data will also be needed very soon.
+
+Why this matters in practice
+
+It is precisely because of the cache that two processors with the same clock speed and number of cores can show noticeably different real-world speeds — the one whose cache is larger or more efficiently organized will have fewer "idle periods" waiting for data from RAM.
+
+This also explains why the way code is written affects performance no less than the hardware: if a program accesses memory predictably and sequentially (for example, goes through an array consecutively) — it "gets along" with the cache much better than a program that jumps through memory in a random order.
